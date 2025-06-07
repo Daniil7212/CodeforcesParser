@@ -1,77 +1,85 @@
 import time
 import csv
+import pyperclip
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
+CONTEST_N = 9
+IS_IN_TIME = True
+LOGIN = "sirius-0625-079"
+PASSWORD = "bitutobab"
+
 # Настройка драйвера (Chrome)
 driver = webdriver.Chrome()
 
 # Переход на страницу входа
-driver.get("https://informatics.msk.ru/login/")
+driver.get("https://sirius0625.contest.codeforces.com/enter")
 
 # Поиск полей ввода и ввод данных
-username_field = driver.find_element(By.NAME, "username")
+username_field = driver.find_element(By.NAME, "handleOrEmail")
 password_field = driver.find_element(By.NAME, "password")
 
-username_field.send_keys("Daniil7212")
-password_field.send_keys("DaN12OlimP72-17!")
+username_field.send_keys("sirius-0625-079")
+password_field.send_keys("bitutobab")
 
 # Нажатие кнопки входа
-login_button = driver.find_element(By.XPATH, "//button[@type='submit']")
-
+login_button = driver.find_element(By.XPATH, "//input[@type='submit']")
 login_button.click()
+time.sleep(5)
 
-button = driver.find_element(By.XPATH, '//*[@id="inst4931"]/div/div/ul/li[3]/div/div/div/a')
-button.click()
-m_max = driver.find_element(By.XPATH, '//*[@id="Pagination"]/ul/li[9]/a')
-m_int = int(m_max.text) - 1
+contests = driver.find_element(By.XPATH, '//*[@id="body"]/div[2]/div/ul/li[2]/a')
+contests.click()
 
-print(m_int)
+groups = driver.find_element(By.XPATH, '//*[@id="pageContent"]/div/div/div[6]/table/tbody')
+groups = groups.find_elements(By.XPATH, './*')
+
+enter = driver.find_element(By.XPATH, f'//*[@id="pageContent"]/div/div/div[6]/table/tbody/tr[{CONTEST_N + 1}]/td[1]/a[1]')
+enter.click()
+time.sleep(0.5)
+
+my_subs = driver.find_element(By.XPATH, f'//*[@id="pageContent"]/div[1]/ul/li[4]/a')
+my_subs.click()
 
 data = []
-for i in range(m_int):
+if IS_IN_TIME:
+    subs = driver.find_element(By.XPATH, '//*[@id="pageContent"]/div[7]/div[6]/table/tbody')
+else:
+    subs = driver.find_element(By.XPATH, '//*[@id="pageContent"]/div[2]/div[6]/table/tbody')
 
-    for j in range(1, 10):
-        j *= 2
-        data_h = []
-        tr = driver.find_element(By.XPATH, f'/html/body/div[2]/div[3]/div/div/section/div/div[1]/div[19]/table/tbody/tr[{j}]')
-        children = tr.find_elements(By.XPATH, './*')
-        for k in children:
-            data_h.append(k.text)
+children = subs.find_elements(By.XPATH, './*')
+for k in children[1:]:
+    data_h = []
+    for p in k.find_elements(By.XPATH, './*'):
+        data_h.append(p.text)
+    data.append(data_h)
 
-        button = tr.find_element(By.XPATH, f"//button[@class='btn btn-link' and @data_run_id='{data_h[0]}']")
-        button.click()
-        time.sleep(1)
-
-        del data_h[5]
-        if data_h[6] == "100":
-            data_h[7] = "Accepted"
-        else:
-            data_h[7] = "Rejected"
-        data.append(data_h)
-
-        code = driver.find_element(By.XPATH, f'//*[@id="sourceTab{data_h[0]}"]/pre/code')
-        time.sleep(1)
-        button.click()
-
-
-    reload = driver.find_element(By.XPATH, f"//button[contains(text(), 'Обновить')]")
-    reload.click()
-    time.sleep(1)
-    nxt = driver.find_element(By.CSS_SELECTOR, f"a.page-link[data-page_id='{i + 1}']").find_element(By.XPATH, "..")
+    idd = driver.find_element(By.LINK_TEXT, f"{data_h[0]}")
+    idd.click()
     time.sleep(0.5)
-    print(nxt.text)
-    nxt.click()
-    time.sleep(0.25)
 
+    copy = driver.find_element(By.ID, "program-source-text-copy")
+    copy.click()
+    time.sleep(0.2)
+
+    copied_text = pyperclip.paste()
+    with open(f'codes/{data_h[0]}.txt', 'w', encoding='utf-8') as file:
+        file.write(copied_text)
+    time.sleep(0.2)
+
+    idds = driver.find_elements(By.CLASS_NAME, "close")
+    for i in idds:
+        try:
+            i.click()
+        except:
+            pass
+    time.sleep(0.5)
 
 with open("output.csv", "w", encoding="utf-8-sig", newline="") as file:
     writer = csv.writer(file, delimiter=";")
     writer.writerows(data)
 
-
 # Закрытие браузера
+time.sleep(10)
 driver.quit()
-driver.get("https://informatics.msk.ru/login/")
