@@ -1,6 +1,7 @@
 import time
 import csv
 import pyperclip
+import ai
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -9,6 +10,7 @@ from selenium.webdriver.common.by import By
 def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
     # Настройка драйвера (Chrome)
     driver = webdriver.Chrome()
+    driver.maximize_window()
 
     # Переход на страницу входа
     driver.get("https://sirius0625.contest.codeforces.com/enter")
@@ -62,6 +64,11 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
         copied_text = pyperclip.paste()
         with open(f'codes/{data_h[0]}.txt', 'w', encoding='utf-8') as file:
             file.write(copied_text)
+
+        #if "Python" in data_h[4] or "PyPy" in data_h[4]:
+         #   if ai.analyze_var_names(copied_text)
+
+
         time.sleep(0.2)
 
         idds = driver.find_elements(By.CLASS_NAME, "close")

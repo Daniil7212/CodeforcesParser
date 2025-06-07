@@ -11,5 +11,5 @@ with open('deepseek_data.json', 'r', encoding='utf-8') as file:
 
 data = data['students']
 
-
+parser.parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD)
 
