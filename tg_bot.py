@@ -10,7 +10,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from telebot import *
 import telebot
-import neuro_check
+import my_ai
 
 # Настройки Telegram бота
 TELEGRAM_BOT_TOKEN = '5560616880:AAGglfnaBXoft3gUC_tJ40Vuf7iL2-C-DlE'
@@ -21,6 +21,8 @@ bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 # Глобальные переменные для хранения состояния
 user_data = {}
+
+classifier = my_ai.create_model(data_path="code_dataset.csv", model_type="nn", epochs=100)
 
 def send_log(message: str):
     """Отправляет сообщение в Telegram."""
@@ -223,9 +225,9 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
                     btn.click()
                     print("Нажата кнопка скопировать")
                     code = pyperclip.paste()
-
-                    ver = neuro_check.predict_plagiarism(code)
-                    print(f"Вероятность списывания: {ver}")
+                    print(code)
+                    ver = my_ai.check(classifier, '\\n '.join(code.split('\n')))
+                    print(f"{ver}")
                     # Сохраняем в файл
                     problem_name = submission_data[3].replace(' ', '_')
                     filename = os.path.join(SAVE_DIR, f"{problem_name}_{submission_data[0]}.txt")

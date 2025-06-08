@@ -200,10 +200,6 @@ def create_model(data_path='code_dataset.csv', model_type='nn', model_save_path=
     else:
         classifier.train(X_train_vec, y_train_vec)
 
-    # Оценка качества
-    X_test_vec, y_test_vec = classifier.preprocess_data(X_test, y_test)
-    classifier.evaluate(X_test_vec, y_test_vec)
-
     # Сохранение модели
     classifier.save_model(model_save_path)
 
@@ -217,7 +213,5 @@ def check(classifier, code_sample):
     # Выполнение предсказания
     predictions = classifier.predict(X_vec)
 
-    # Форматирование результатов
-    results = []
     for pred in predictions:
         return pred
