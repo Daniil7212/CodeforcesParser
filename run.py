@@ -1,15 +1,15 @@
 import json
 import parser
+import my_ai
 
-CONTEST_N = 6
-IS_IN_TIME = True
-LOGIN = "sirius-0625-073"
-PASSWORD = "womatowad"
+classifier = my_ai.create_model(
+        data_path='code_dataset.csv',
+        model_type='nn',
+        epochs=250
+    )
 
-with open('deepseek_data.json', 'r', encoding='utf-8') as file:
-    data = json.load(file)
+predictions = my_ai.check(classifier, ['print("HEELEHEAIU")'])
 
-data = data['students']
-
-parser.parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD)
-
+print("\nРезультаты классификации:")
+for result in predictions:
+    print(f"\nКод:\n{result['code']}\nПредсказание: {result['prediction']}")

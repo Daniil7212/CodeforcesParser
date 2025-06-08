@@ -140,65 +140,84 @@ class CodeClassifier:
         return classifier
 
 
-def check(s):
-    # 5. Пример предсказания
-    new_codes = [s]
+def create_model(data_path='code_dataset.csv', model_type='nn', model_save_path='code_classifier',
+                           epochs=500):
+    """
+    Создает и обучает модель классификации кода
 
-    X_new_vec = classifier.preprocess_data(new_codes)
-    predictions = classifier.predict(X_new_vec)
+    Параметры:
+        data_path (str): путь к CSV файлу с данными
+        model_type (str): тип модели ('nn' - нейросеть, 'rf' - Random Forest)
+        model_save_path (str): путь для сохранения модели
+        epochs (int): количество эпох обучения (только для нейросети)
 
-    print("\nPredictions for new codes:")
-    for code, pred in zip(new_codes, predictions):
-        print(f"\nCode:\n{code}\nPrediction: {'Copied' if pred == 1 else 'Original'}")
-
-
-# Пример использования с обработкой возможных ошибок
-if __name__ == "__main__":
+    Возвращает:
+        CodeClassifier: обученный классификатор
+    """
+    # Загрузка данных
     try:
-        # 1. Загрузка данных
-        data = pd.read_csv('code_dataset.csv', sep='~')
+        # Чтение CSV с обработкой запятых в коде
+        data = pd.read_csv(data_path, sep='~')
+
+        # Проверка структуры данных
+        if len(data.columns) != 2:
+            raise ValueError("CSV должен содержать ровно 2 столбца: code и label")
+
+        data.columns = ['code', 'label']  # Принудительно задаем названия столбцов
         texts = data['code'].values
         labels = data['label'].values
+
     except Exception as e:
-        print(f"Error loading dataset: {e}")
-        print("Creating dummy data for demonstration...")
+        print(f"Ошибка загрузки данных: {e}")
+        print("Используем демонстрационные данные...")
         texts = [
-            "def add(a, b):\n    return a + b",
-            "function sum(x, y) {\n  return x + y;\n}",
-            "def calculate_sum(first_number, second_number):\n    result = first_number + second_number\n    return result",
-            "const square = num => num * num;",
-            "def compute_total(initial_value, increment):\n    total = initial_value + increment\n    return total",
-            "print('Hello, world!')"
+            "def add(a, b): return a + b",
+            "print('Hello, world!')",
+            "def func(x, y):\n    return x * y",
+            "def calculate(a, b):\n    result = a + b\n    return result",
+            "console.log('test')"
         ]
-        labels = np.array([0, 0, 1, 0, 1, 0])
+        labels = np.array([0, 0, 1, 1, 0])
 
-    # 2. Разделение данных
-    try:
-        X_train, X_test, y_train, y_test = train_test_split(
-            texts, labels, test_size=0.2, random_state=42
-        )
+    # Разделение данных
+    X_train, X_test, y_train, y_test = train_test_split(
+        texts, labels, test_size=0.2, random_state=42
+    )
 
-        # 3. Инициализация и обучение
-        classifier = CodeClassifier(model_type='nn')
+    # Создание и обучение классификатора
+    classifier = CodeClassifier(model_type=model_type)
 
-        # Преобразование текста в признаки
-        X_train_vec, y_train_vec = classifier.preprocess_data(X_train, y_train, fit_vectorizer=True)
+    # Преобразование текста в признаки
+    X_train_vec, y_train_vec = classifier.preprocess_data(X_train, y_train, fit_vectorizer=True)
 
-        # Для нейронной сети можно добавить валидационный набор
+    # Для нейросети добавляем валидационный набор
+    if model_type == 'nn':
         X_val, X_test, y_val, y_test = train_test_split(
             X_test, y_test, test_size=0.5, random_state=42
         )
         X_val_vec, y_val_vec = classifier.preprocess_data(X_val, y_val)
+        classifier.train(X_train_vec, y_train_vec, X_val_vec, y_val_vec, epochs=epochs)
+    else:
+        classifier.train(X_train_vec, y_train_vec)
 
-        # Обучение модели
-        classifier.train(X_train_vec, y_train_vec, X_val_vec, y_val_vec, epochs=250)
+    # Оценка качества
+    X_test_vec, y_test_vec = classifier.preprocess_data(X_test, y_test)
+    classifier.evaluate(X_test_vec, y_test_vec)
 
-        # 4. Оценка качества
-        X_test_vec, y_test_vec = classifier.preprocess_data(X_test, y_test)
-        classifier.evaluate(X_test_vec, y_test_vec)
+    # Сохранение модели
+    classifier.save_model(model_save_path)
 
-        # 6. Сохранение модели
-        classifier.save_model()
+    return classifier
 
-    except Exception as e:
-        print(f"Error during training/evaluation: {e}")
+
+def check(classifier, code_sample):
+    # Преобразование входных данных
+    X_vec = classifier.preprocess_data([code_sample])
+
+    # Выполнение предсказания
+    predictions = classifier.predict(X_vec)
+
+    # Форматирование результатов
+    results = []
+    for pred in predictions:
+        return pred
