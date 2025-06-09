@@ -53,7 +53,7 @@ class CodeClassifier:
             return X, y
         return X
 
-    def train(self, X_train, y_train, X_val=None, y_val=None, epochs=500, batch_size=32):
+    def train(self, X_train, y_train, X_val=None, y_val=None, epochs=250, batch_size=32):
         if self.model_type == 'nn':
             X_train_dense = X_train.toarray()
             input_dim = X_train_dense.shape[1]
@@ -84,7 +84,7 @@ class CodeClassifier:
         if self.model_type == 'nn':
             X_dense = X.toarray()
             predictions = self.model.predict(X_dense)
-            return (predictions > 0.5).astype(int).flatten()
+            return predictions
         else:
             return self.model.predict(X)
 
@@ -213,5 +213,4 @@ def check(classifier, code_sample):
     # Выполнение предсказания
     predictions = classifier.predict(X_vec)
 
-    for pred in predictions:
-        return pred
+    return round(predictions[0][0] * 100.0, 4)
