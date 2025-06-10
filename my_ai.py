@@ -193,7 +193,7 @@ def create_model(data_path='code_dataset.csv', model_type='nn', model_save_path=
     return classifier
 
 
-def load(model_path='code_classifier', model_type='nn'):
+def load_model(model_path='code_classifier', model_type='nn'):
     try:
         classifier = CodeClassifier.load_model(model_path=model_path, model_type=model_type)
 
@@ -226,4 +226,4 @@ def compare(code1, code2):
     # Сходство на основе строк (Левенштейн)
     text_similarity = Levenshtein.ratio(norm_code1, norm_code2) * 100
 
-    return round(text_similarity, 3)
+    return round(text_similarity, 2)

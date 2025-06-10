@@ -2,15 +2,10 @@ import json
 import parser
 import my_ai
 
-classifier = my_ai.load(model_path="code_classifier")
-a = """a = input()
-print("HELLO:")
+classifier = my_ai.load_model()
+
+a = """t = 0
+print(t)
 """
 
-b = """a = input()
-if (a == '@' and a == '.'):
-    print("YES")
-else:
-    print("NO")
-"""
-print(my_ai.compare(a, b))
+print(my_ai.check(classifier, a))
