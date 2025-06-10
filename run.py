@@ -2,18 +2,15 @@ import json
 import parser
 import my_ai
 
-classifier = my_ai.create_model(
-        data_path='code_dataset.csv',
-        model_type='nn',
-        epochs=250
-    )
+classifier = my_ai.load(model_path="code_classifier")
 a = """a = input()
-if '@' in a and '.' in a:
+print("HELLO:")
+"""
+
+b = """a = input()
+if (a == '@' and a == '.'):
     print("YES")
 else:
     print("NO")
 """
-code = '\\n '.join(a.split('\n'))
-predictions = my_ai.check(classifier, code)
-
-print(predictions)
+print(my_ai.compare(a, b))
