@@ -167,7 +167,7 @@ def create_model(data_path='code_dataset.csv', model_type='nn', model_save_path=
         labels = np.array([0, 0, 1, 1, 0])
 
     # Разделение данных
-    X_train, X_test, y_train, y_test = train_test_split(
+    x_train, x_test, y_train, y_test = train_test_split(
         texts, labels, test_size=0.2, random_state=42
     )
 
@@ -175,17 +175,17 @@ def create_model(data_path='code_dataset.csv', model_type='nn', model_save_path=
     classifier = CodeClassifier(model_type=model_type)
 
     # Преобразование текста в признаки
-    X_train_vec, y_train_vec = classifier.preprocess_data(X_train, y_train, fit_vectorizer=True)
+    x_train_vec, y_train_vec = classifier.preprocess_data(x_train, y_train, fit_vectorizer=True)
 
     # Для нейросети добавляем валидационный набор
     if model_type == 'nn':
-        X_val, X_test, y_val, y_test = train_test_split(
-            X_test, y_test, test_size=0.5, random_state=42
+        x_val, x_test, y_val, y_test = train_test_split(
+            x_test, y_test, test_size=0.5, random_state=42
         )
-        X_val_vec, y_val_vec = classifier.preprocess_data(X_val, y_val)
-        classifier.train(X_train_vec, y_train_vec, X_val_vec, y_val_vec, epochs=epochs)
+        x_val_vec, y_val_vec = classifier.preprocess_data(x_val, y_val)
+        classifier.train(x_train_vec, y_train_vec, x_val_vec, y_val_vec, epochs=epochs)
     else:
-        classifier.train(X_train_vec, y_train_vec)
+        classifier.train(x_train_vec, y_train_vec)
 
     # Сохранение модели
     classifier.save_model(model_save_path)
@@ -207,10 +207,10 @@ def load(model_path='code_classifier', model_type='nn'):
 
 def check(classifier, code_sample):
     # Преобразование входных данных
-    X_vec = classifier.preprocess_data([code_sample])
+    x_vec = classifier.preprocess_data([code_sample])
 
     # Выполнение предсказания
-    predictions = classifier.predict(X_vec)
+    predictions = classifier.predict(x_vec)
 
     return round(predictions[0][0] * 100.0, 4)
 
