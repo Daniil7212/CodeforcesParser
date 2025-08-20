@@ -1,7 +1,6 @@
 import os
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import time
 import csv
 import pyperclip
@@ -24,6 +23,7 @@ user_data = {}
 
 classifier = my_ai.create_model(data_path="code_dataset.csv", model_type="nn", epochs=100)
 
+
 def send_log(message: str):
     """Отправляет сообщение в Telegram."""
     try:
@@ -31,17 +31,18 @@ def send_log(message: str):
     except Exception as e:
         print(f"Ошибка при отправке сообщения в Telegram: {e}")
 
+
 def parser_wrapper(chat_id):
     """Запускает парсер с данными из user_data"""
     data = user_data.get(chat_id)
     if not data:
         bot.send_message(chat_id, "Ошибка: данные не найдены")
         return
-    
+
     with open("deepseek_data.json", "r", encoding="utf-8") as fle:
         json_data = json.load(fle)
     json_data = json_data["students"]
-    
+
     if data['surname'] == "-":
         for student in json_data:
             for contest_id in data['ids']:
@@ -52,6 +53,7 @@ def parser_wrapper(chat_id):
                 for contest_id in data['ids']:
                     parser(contest_id, True, student["login"], student["password"])
                 break
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -66,9 +68,10 @@ def start(message):
     user_data[TELEGRAM_CHAT_ID] = {}
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(types.KeyboardButton("Все пользователи"))
-    bot.send_message(TELEGRAM_CHAT_ID, 
-                    "Введите фамилию (или нажмите 'Все пользователи'):", 
-                    reply_markup=markup)
+    bot.send_message(TELEGRAM_CHAT_ID,
+                     "Введите фамилию (или нажмите 'Все пользователи'):",
+                     reply_markup=markup)
+
 
 @bot.message_handler(func=lambda message: 'surname' not in user_data.get(message.chat.id, {}))
 def get_surname(message):
@@ -82,13 +85,14 @@ def get_surname(message):
     else:
         user_data[chat_id]['surname'] = "-"
         print("Выбраны все пользователи")
-        bot.send_message(chat_id, 
-                        "Введите номера контестов через пробел:", 
-                        reply_markup=types.ReplyKeyboardRemove())
+        bot.send_message(chat_id,
+                         "Введите номера контестов через пробел:",
+                         reply_markup=types.ReplyKeyboardRemove())
 
-@bot.message_handler(func=lambda message: 'surname' in user_data.get(message.chat.id, {}) 
-             and user_data.get(message.chat.id, {}).get('surname') != "-" 
-             and 'name' not in user_data.get(message.chat.id, {}))
+
+@bot.message_handler(func=lambda message: 'surname' in user_data.get(message.chat.id, {})
+                                          and user_data.get(message.chat.id, {}).get('surname') != "-"
+                                          and 'name' not in user_data.get(message.chat.id, {}))
 def get_name(message):
     """Получаем имя пользователя"""
     chat_id = message.chat.id
@@ -96,9 +100,10 @@ def get_name(message):
     bot.send_message(chat_id, "Введите номера контестов через пробел:")
     print(f"Получено имя {user_data[chat_id]['name']}")
 
-@bot.message_handler(func=lambda message: ('name' in user_data.get(message.chat.id, {}) 
-             or user_data.get(message.chat.id, {}).get('surname') == "-") 
-             and 'ids' not in user_data.get(message.chat.id, {}))
+
+@bot.message_handler(func=lambda message: ('name' in user_data.get(message.chat.id, {})
+                                           or user_data.get(message.chat.id, {}).get('surname') == "-")
+                                          and 'ids' not in user_data.get(message.chat.id, {}))
 def get_contest_ids(message):
     """Получаем номера контестов"""
     chat_id = message.chat.id
@@ -110,6 +115,7 @@ def get_contest_ids(message):
     except ValueError:
         bot.send_message(chat_id, "Ошибка: введите числа через пробел")
         del user_data[chat_id]
+
 
 # Остальной код функции parser() остается без изменений
 def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
@@ -124,19 +130,19 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
     try:
         # Отправляем сообщение о начале работы
         print(f"🟢 Начата обработка пользователя {LOGIN} для контеста {CONTEST_N}")
-        
+
         driver = webdriver.Chrome()
         driver.maximize_window()
-        
+
         # Шаг 1: Авторизация
         print(f"🔑 Попытка авторизации для {LOGIN}")
         driver.get("https://sirius0625.contest.codeforces.com/enter")
-        
+
         # Ввод логина и пароля
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.NAME, "handleOrEmail"))
         ).send_keys(LOGIN)
-        
+
         driver.find_element(By.NAME, "password").send_keys(PASSWORD)
         driver.find_element(By.XPATH, "//input[@type='submit']").click()
         time.sleep(3)
@@ -153,13 +159,13 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
             EC.presence_of_element_located(
                 (By.XPATH, f'/html/body/div[6]/div[3]/div[2]/div/div/div[6]/table/tbody/tr[{CONTEST_N + 1}]/td[1]'))
         ).text.split("\n")[0]
-        
+
         print(f"📌 Выбран контест: {contest_name}")
 
         # Шаг 3: Вход в контест
         try:
             enter = driver.find_element(
-                By.XPATH, 
+                By.XPATH,
                 f'//*[@id="pageContent"]/div/div/div[6]/table/tbody/tr[{CONTEST_N + 1}]/td[1]/a[1]')
             enter.click()
             time.sleep(1)
@@ -188,22 +194,22 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
             print(f"❌ Не найдены посылки: {str(e)}")
             driver.quit()
             return
-        
+
         data = []
         children = subs.find_elements(By.XPATH, './*')[1:]  # Пропускаем заголовок
         send_log(f"🔍 Найдено {len(children)} посылок для анализа")
         print(f"🔍 Найдено {len(children)} посылок для анализа")
         SAVE_DIR = "solutions"
         os.makedirs(SAVE_DIR, exist_ok=True)
-        
+
         submission_rows = subs.find_elements(By.XPATH, './/tr[position()>1]')
-        
+
         for idx, row in enumerate(submission_rows, 1):
             try:
                 cells = row.find_elements(By.XPATH, './/td')
                 if len(cells) < 6:
                     continue
-                    
+
                 submission_data = [
                     cells[0].text.strip(),  # ID
                     cells[1].text.strip(),  # Время
@@ -212,13 +218,14 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
                     cells[4].text.strip(),  # Язык
                     cells[5].text.upper().strip()  # Вердикт
                 ]
-                print(f"Рассматривается посылка со следующими данными: ID:{submission_data[0]}, TIME:{submission_data[1]}, AUTHOR:{submission_data[2]}, TASK:{submission_data[3]}, LANGUAGE:{submission_data[4]}, VER:{submission_data[5]}")
+                print(
+                    f"Рассматривается посылка со следующими данными: ID:{submission_data[0]}, TIME:{submission_data[1]}, AUTHOR:{submission_data[2]}, TASK:{submission_data[3]}, LANGUAGE:{submission_data[4]}, VER:{submission_data[5]}")
                 # Открываем посылку
                 idd = driver.find_element(By.LINK_TEXT, submission_data[0])
                 idd.click()
                 print("Открыл решение")
                 time.sleep(3)
-                
+
                 try:
                     # Получаем код напрямую из элемента
                     btn = driver.find_element(By.XPATH, '//*[@id="program-source-text-copy"]')
@@ -231,7 +238,7 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
                     # Сохраняем в файл
                     problem_name = submission_data[3].replace(' ', '_')
                     filename = os.path.join(SAVE_DIR, f"{problem_name}_{submission_data[0]}.txt")
-                    
+
                     with open(filename, 'w', encoding='utf-8') as f:
                         f.write(f"Задача: {submission_data[3]}\n")
                         f.write(f"Автор: {submission_data[2]}\n")
@@ -282,7 +289,7 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
             except Exception as e:
                 print(f"⚠️ Ошибка обработки строки {idx}: {str(e)}")
                 continue
-        
+
     except Exception as e:
         print(f"🔥 Критическая ошибка: {str(e)}")
     finally:
@@ -290,7 +297,7 @@ def parser(CONTEST_N, IS_IN_TIME, LOGIN, PASSWORD):
         send_log(f"🔴 Завершена обработка пользователя {LOGIN} для контеста {CONTEST_N}")
         print(f"🔴 Завершена обработка пользователя {LOGIN} для контеста {CONTEST_N}")
 
+
 if __name__ == "__main__":
-    #with open("")
     print("Бот запущен...")
     bot.polling(none_stop=True)
